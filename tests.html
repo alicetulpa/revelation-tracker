@@ -344,6 +344,53 @@
                 });
             });
         });
+
+        describe('UI Helper Functions', () => {
+            it('should have getStatusColor function', () => {
+                assertEqual(typeof getStatusColor, 'function', 'getStatusColor should be a function');
+            });
+            
+            it('should return correct colors for each status', () => {
+                assertEqual(getStatusColor('fulfilled'), '#22c55e', 'Fulfilled should be green');
+                assertEqual(getStatusColor('in_progress'), '#f59e0b', 'In progress should be amber');
+                assertEqual(getStatusColor('disputed'), '#8b5cf6', 'Disputed should be purple');
+                assertEqual(getStatusColor('pending'), '#6b7280', 'Pending should be gray');
+            });
+            
+            it('should have formatStatus function', () => {
+                assertEqual(typeof formatStatus, 'function', 'formatStatus should be a function');
+            });
+            
+            it('should format status strings correctly', () => {
+                assertEqual(formatStatus('fulfilled'), 'Fulfilled', 'Should capitalize fulfilled');
+                assertEqual(formatStatus('in_progress'), 'In Progress', 'Should format in_progress');
+                assertEqual(formatStatus('disputed'), 'Disputed', 'Should capitalize disputed');
+                assertEqual(formatStatus('pending'), 'Pending', 'Should capitalize pending');
+            });
+            
+            it('should have getCategoryIcon function', () => {
+                assertEqual(typeof getCategoryIcon, 'function', 'getCategoryIcon should be a function');
+            });
+            
+            it('should return correct icons for categories', () => {
+                assertEqual(getCategoryIcon('seal'), '📜', 'Seal icon');
+                assertEqual(getCategoryIcon('trumpet'), '📯', 'Trumpet icon');
+                assertEqual(getCategoryIcon('bowl'), '🬊', 'Bowl icon');
+                assertEqual(getCategoryIcon('sign'), '✨', 'Sign icon');
+                assertEqual(getCategoryIcon('other'), '📖', 'Other icon');
+            });
+            
+            it('should have getProgressBarClass function', () => {
+                assertEqual(typeof getProgressBarClass, 'function', 'getProgressBarClass should be a function');
+            });
+            
+            it('should return correct progress bar class based on percentage', () => {
+                assertEqual(getProgressBarClass(10), 'low', 'Low progress');
+                assertEqual(getProgressBarClass(35), 'medium', 'Medium progress');
+                assertEqual(getProgressBarClass(60), 'high', 'High progress');
+                assertEqual(getProgressBarClass(85), 'critical', 'Critical progress');
+            });
+        });
     </script>
 
     <script>

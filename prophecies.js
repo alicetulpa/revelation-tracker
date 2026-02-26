@@ -570,3 +570,41 @@ function getStats() {
         bowls: countByStatus(categories.bowls)
     };
 }
+
+function getStatusColor(status) {
+    const colors = {
+        'fulfilled': '#22c55e',
+        'in_progress': '#f59e0b',
+        'disputed': '#8b5cf6',
+        'pending': '#6b7280'
+    };
+    return colors[status] || '#6b7280';
+}
+
+function formatStatus(status) {
+    const formats = {
+        'fulfilled': 'Fulfilled',
+        'in_progress': 'In Progress',
+        'disputed': 'Disputed',
+        'pending': 'Pending'
+    };
+    return formats[status] || status;
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'seal': '📜',
+        'trumpet': '📯',
+        'bowl': '🬊',
+        'sign': '✨',
+        'other': '📖'
+    };
+    return icons[category] || '📖';
+}
+
+function getProgressBarClass(percentage) {
+    if (percentage >= 80) return 'critical';
+    if (percentage >= 55) return 'high';
+    if (percentage >= 30) return 'medium';
+    return 'low';
+}
