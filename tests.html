@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revelation Tracker - Tests</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: #8b5cf6; margin-bottom: 20px; }
+        .summary {
+            background: #1a1a2e;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 30px;
+        }
+        .summary .pass { color: #22c55e; }
+        .summary .fail { color: #ef4444; }
+        .summary .total { color: #a78bfa; }
+        .test-suite {
+            margin-bottom: 20px;
+            background: #12121a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .suite-header {
+            background: #1a1a2e;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+        .suite-header:hover { background: #252538; }
+        .suite-header .count { color: #666; }
+        .test-results { padding: 10px 15px; }
+        .test {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .test.pass { background: rgba(34, 197, 94, 0.1); border-left: 3px solid #22c55e; }
+        .test.fail { background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; }
+        .test .name { flex: 1; }
+        .test .status { font-weight: bold; }
+        .error {
+            background: #2a1a1a;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #ff6b6b;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Revelation Tracker - Test Suite</h1>
+    <div class="summary" id="summary"></div>
+    <div id="results"></div>
+
+    <script src="prophecies.js"></script>
+    <script>
+        const TestRunner = {
+            suites: [],
+            currentSuite: null,
+            passed: 0,
+            failed: 0,
+            
+            describe(name, fn) {
+                this.currentSuite = { name, tests: [], passed: 0, failed: 0 };
+                fn();
+                this.suites.push(this.currentSuite);
+                this.currentSuite = null;
+            },
+            
+            it(name, fn) {
+                const test = { name, passed: false, error: null };
+                try {
+                    fn();
+                    test.passed = true;
+                    this.currentSuite.passed++;
+                    this.passed++;
+                } catch (e) {
+                    test.error = e.message || e;
+                    this.currentSuite.failed++;
+                    this.failed++;
+                }
+                this.currentSuite.tests.push(test);
+            },
+            
+            assertEqual(actual, expected, msg = '') {
+                if (actual !== expected) {
+                    throw new Error(`${msg}\nExpected: ${JSON.stringify(expected)}\nActual: ${JSON.stringify(actual)}`);
+                }
+            },
+            
+            assertDeepEqual(actual, expected, msg = '') {
+                if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                    throw new Error(`${msg}\nExpected: ${JSON.stringify(expected)}\nActual: ${JSON.stringify(actual)}`);
+                }
+            },
+            
+            assertTrue(value, msg = '') {
+                if (!value) throw new Error(`${msg}\nExpected true, got ${value}`);
+            },
+            
+            assertFalse(value, msg = '') {
+                if (value) throw new Error(`${msg}\nExpected false, got ${value}`);
+            },
+            
+            assertArray(value, msg = '') {
+                if (!Array.isArray(value)) throw new Error(`${msg}\nExpected array, got ${typeof value}`);
+            },
+            
+            assertInRange(value, min, max, msg = '') {
+                if (typeof value !== 'number' || value < min || value > max) {
+                    throw new Error(`${msg}\nExpected number between ${min} and ${max}, got ${value}`);
+                }
+            },
+            
+            render() {
+                const summary = document.getElementById('summary');
+                summary.innerHTML = `
+                    <span class="pass">Passed: ${this.passed}</span>
+                    <span class="fail">Failed: ${this.failed}</span>
+                    <span class="total">Total: ${this.passed + this.failed}</span>
+                `;
+                
+                const results = document.getElementById('results');
+                results.innerHTML = this.suites.map(suite => `
+                    <div class="test-suite">
+                        <div class="suite-header">
+                            <span>${suite.name}</span>
+                            <span class="count">${suite.passed}/${suite.tests.length}</span>
+                        </div>
+                        <div class="test-results">
+                            ${suite.tests.map(test => `
+                                <div class="test ${test.passed ? 'pass' : 'fail'}">
+                                    <span class="name">${test.name}</span>
+                                    <span class="status">${test.passed ? '✓' : '✗'}</span>
+                                </div>
+                                ${test.error ? `<div class="error">${test.error}</div>` : ''}
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            run() {
+                this.render();
+                if (this.failed > 0) {
+                    console.error(`Tests failed: ${this.failed}/${this.passed + this.failed}`);
+                } else {
+                    console.log(`All tests passed: ${this.passed}`);
+                }
+            }
+        };
+
+        const { describe, it, assertEqual, assertDeepEqual, assertTrue, assertFalse, assertArray, assertInRange } = TestRunner;
+    </script>
+
+    <script>
+        describe('Data Model - Prophecies Array', () => {
+            it('should exist and be an array', () => {
+                assertArray(PROPHECIES, 'PROPHECIES should be an array');
+            });
+            
+            it('should contain prophecy objects with required fields', () => {
+                assertTrue(PROPHECIES.length > 0, 'PROPHECIES should not be empty');
+                const first = PROPHECIES[0];
+                assertEqual(typeof first.id, 'string', 'id should be string');
+                assertEqual(typeof first.reference, 'string', 'reference should be string');
+                assertEqual(typeof first.title, 'string', 'title should be string');
+                assertEqual(typeof first.description, 'string', 'description should be string');
+                assertEqual(typeof first.status, 'string', 'status should be string');
+                assertArray(first.matchedEvents, 'matchedEvents should be array');
+                assertInRange(first.confidence, 0, 100, 'confidence should be 0-100');
+                assertEqual(typeof first.category, 'string', 'category should be string');
+            });
+            
+            it('should have valid status values', () => {
+                const validStatuses = ['fulfilled', 'in_progress', 'pending', 'disputed'];
+                PROPHECIES.forEach(p => {
+                    assertTrue(validStatuses.includes(p.status), `Invalid status: ${p.status}`);
+                });
+            });
+            
+            it('should have valid category values', () => {
+                const validCategories = ['seal', 'trumpet', 'bowl', 'sign', 'other'];
+                PROPHECIES.forEach(p => {
+                    assertTrue(validCategories.includes(p.category), `Invalid category: ${p.category}`);
+                });
+            });
+            
+            it('should include all 7 seals', () => {
+                const seals = PROPHECIES.filter(p => p.category === 'seal');
+                assertEqual(seals.length, 7, 'Should have exactly 7 seals');
+            });
+            
+            it('should include all 7 trumpets', () => {
+                const trumpets = PROPHECIES.filter(p => p.category === 'trumpet');
+                assertEqual(trumpets.length, 7, 'Should have exactly 7 trumpets');
+            });
+            
+            it('should include all 7 bowls', () => {
+                const bowls = PROPHECIES.filter(p => p.category === 'bowl');
+                assertEqual(bowls.length, 7, 'Should have exactly 7 bowls');
+            });
+            
+            it('should have unique IDs for all prophecies', () => {
+                const ids = PROPHECIES.map(p => p.id);
+                const uniqueIds = new Set(ids);
+                assertEqual(ids.length, uniqueIds.size, 'All IDs should be unique');
+            });
+        });
+
+        describe('Progress Calculation', () => {
+            it('should have a calculateProgress function', () => {
+                assertEqual(typeof calculateProgress, 'function', 'calculateProgress should be a function');
+            });
+            
+            it('should return a number between 0 and 100', () => {
+                const progress = calculateProgress();
+                assertInRange(progress, 0, 100, 'Progress should be between 0 and 100');
+            });
+            
+            it('should calculate fulfilled as 100%', () => {
+                const testProphecies = [
+                    { id: '1', status: 'fulfilled', confidence: 100 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 100, 'Fulfilled should be 100%');
+            });
+            
+            it('should calculate pending as 0%', () => {
+                const testProphecies = [
+                    { id: '1', status: 'pending', confidence: 0 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 0, 'Pending should be 0%');
+            });
+            
+            it('should calculate in_progress as 50%', () => {
+                const testProphecies = [
+                    { id: '1', status: 'in_progress', confidence: 100 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 50, 'In progress should be 50%');
+            });
+            
+            it('should calculate disputed as 25%', () => {
+                const testProphecies = [
+                    { id: '1', status: 'disputed', confidence: 100 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 25, 'Disputed should be 25%');
+            });
+            
+            it('should weight by confidence percentage', () => {
+                const testProphecies = [
+                    { id: '1', status: 'fulfilled', confidence: 50 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 50, '50% confidence fulfilled should be 50%');
+            });
+            
+            it('should calculate average across multiple prophecies', () => {
+                const testProphecies = [
+                    { id: '1', status: 'fulfilled', confidence: 100 },
+                    { id: '2', status: 'pending', confidence: 0 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 50, 'Average of fulfilled and pending should be 50%');
+            });
+            
+            it('should handle complex combinations correctly', () => {
+                const testProphecies = [
+                    { id: '1', status: 'fulfilled', confidence: 100 },
+                    { id: '2', status: 'in_progress', confidence: 100 },
+                    { id: '3', status: 'disputed', confidence: 100 },
+                    { id: '4', status: 'pending', confidence: 0 }
+                ];
+                const progress = calculateProgress(testProphecies);
+                assertEqual(progress, 43.75, '(100 + 50 + 25 + 0) / 4 = 43.75%');
+            });
+        });
+
+        describe('Event Matching', () => {
+            it('should have a getMatchedEvents function', () => {
+                assertEqual(typeof getMatchedEvents, 'function', 'getMatchedEvents should be a function');
+            });
+            
+            it('should return an array of matched events for a prophecy', () => {
+                const events = getMatchedEvents('seal-1');
+                assertArray(events, 'Should return an array');
+            });
+            
+            it('should return empty array for non-existent prophecy', () => {
+                const events = getMatchedEvents('non-existent-id');
+                assertDeepEqual(events, [], 'Should return empty array');
+            });
+            
+            it('should have events with date, title, and description', () => {
+                const prophecy = PROPHECIES.find(p => p.matchedEvents.length > 0);
+                if (prophecy) {
+                    const event = prophecy.matchedEvents[0];
+                    assertEqual(typeof event.date, 'string', 'Event should have date');
+                    assertEqual(typeof event.title, 'string', 'Event should have title');
+                    assertEqual(typeof event.description, 'string', 'Event should have description');
+                }
+            });
+        });
+
+        describe('Stats Functions', () => {
+            it('should have a getStats function', () => {
+                assertEqual(typeof getStats, 'function', 'getStats should be a function');
+            });
+            
+            it('should return stats object with counts', () => {
+                const stats = getStats();
+                assertEqual(typeof stats, 'object', 'Should return an object');
+                assertEqual(typeof stats.seals, 'object', 'Should have seals stats');
+                assertEqual(typeof stats.trumpets, 'object', 'Should have trumpets stats');
+                assertEqual(typeof stats.bowls, 'object', 'Should have bowls stats');
+            });
+            
+            it('should count fulfilled, in_progress, disputed, pending for each category', () => {
+                const stats = getStats();
+                ['seals', 'trumpets', 'bowls'].forEach(cat => {
+                    assertEqual(typeof stats[cat].fulfilled, 'number', `${cat} fulfilled should be number`);
+                    assertEqual(typeof stats[cat].in_progress, 'number', `${cat} in_progress should be number`);
+                    assertEqual(typeof stats[cat].disputed, 'number', `${cat} disputed should be number`);
+                    assertEqual(typeof stats[cat].pending, 'number', `${cat} pending should be number`);
+                });
+            });
+        });
+    </script>
+
+    <script>
+        TestRunner.run();
+    </script>
+</body>
+</html>
